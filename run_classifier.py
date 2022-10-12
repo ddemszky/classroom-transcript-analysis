@@ -14,9 +14,9 @@ from simpletransformers.classification import ClassificationModel
 from argparse import ArgumentParser
 from sklearn.model_selection import KFold, train_test_split
 from scipy.stats import pearsonr, spearmanr
-import torch
-import gc
 import warnings
+import pandas as pd
+from sys import exit
 warnings.filterwarnings("ignore")
 
 
@@ -26,35 +26,33 @@ def pearson_corr(preds, labels):
 def spearman_corr(preds, labels):
     return spearmanr(preds, labels)[0]
 
-def train(colname, train_df, eval_df, text_col,
-          output_dir, model="roberta", num_train_epochs=10, cross_validate=False):
-
-
-    train_df = train_df.rename(columns={text_col: 'text', colname: 'labels'})[["text", "labels"]].dropna()
-    eval_df = eval_df.rename(columns={text_col: 'text', colname: 'labels'})[["text", "labels"]].dropna()
-
-    print(len(train_df))
-    print(len(eval_df))
-    print(train_df["labels"].isnull().sum())
+def train(colname, train_df, eval_df, text_cols,
+          output_dir, model="roberta", num_labels=2,
+          num_train_epochs=10,
+          train_batch_size=4, gradient_accumulation_steps=4,
+          max_seq_length=512,
+          cross_validate=False):
+    print("Train size: %d" % len(train_df))
+    print("Eval size: %d" % len(eval_df))
 
     train_args = {
         'reprocess_input_data': True,
         'overwrite_output_dir': True,
         'evaluate_during_training': True,  # change if needed
-        'max_seq_length': 512,
+        'max_seq_length': int(max_seq_length / len(text_cols)),
         'num_train_epochs': num_train_epochs,
         'evaluate_during_training_steps': 500,
         'save_eval_checkpoints': False,
         'save_model_every_epoch': False,
         'wandb_project': colname,
-        'train_batch_size': 8,
+        'train_batch_size': train_batch_size,
         'output_dir': output_dir + "/" + colname,
         'best_model_dir': output_dir + "/" + colname + "/best_model",
         'cache_dir': output_dir + "/" + colname + "/cache",
         'tensorboard_dir': output_dir + "/" + colname + '/tensorboard',
         'regression': True,
         'use_cuda': True,
-        'gradient_accumulation_steps': 2,
+        'gradient_accumulation_steps': gradient_accumulation_steps,
         'wandb_kwargs': {'reinit': True,},
         'fp16': False,
         'fp16_opt_level': 'O0',
@@ -63,7 +61,7 @@ def train(colname, train_df, eval_df, text_col,
         'save_optimizer_and_scheduler': True,
     }
 
-    model = ClassificationModel(model.split("-")[0], model, num_labels=1, args=train_args)
+    model = ClassificationModel(model.split("-")[0], model, num_labels=num_labels, args=train_args)
 
     model.train_model(train_df, eval_df=eval_df, pearson_corr=pearson_corr, spearman_corr=spearman_corr)
     return model
@@ -92,79 +90,88 @@ if __name__ == "__main__":
     parser.add_argument("--train_data", type=str,
                         default="data/paired_annotations.csv",
                         help="Input csv file.")
-    parser.add_argument("--text_cols", type=str, help="Text columns.")
+    parser.add_argument("--dev_split_size", type=float, default=0,
+                        help="Percentage of data to hold out for validation.")
+    parser.add_argument("--num_train_epochs", type=int, default=5,
+                        help="Number of training epochs")
+    parser.add_argument("--text_cols", type=str, help="Text columns, comma separated.")
     parser.add_argument("--label_col", type=str, help="Column to evaluate.")
+
     parser.add_argument("--cv", action='store_true',
                         help="If true, run cross validation.")
+    parser.add_argument("--cv_folds", type=int, default=5,
+                        help="Number of folds for cross validation.")
 
     parser.add_argument("--predict", action='store_true',
                         help="If true, predict.")
+    parser.add_argument("--predict_data", type=str,
+                        default="data/paired_utterances.csv",
+                        help="Input csv file.")
     parser.add_argument("--predict_index_col", type=str,
                         help="Index column for mapping predictions to input.")
 
-    parser.add_argument("--output_dir", type=str, default="logs/roberta",
+    parser.add_argument("--model_type", type=str, default="roberta-base",
+                        help="Model type.")
+    parser.add_argument("--output_dir", type=str, default="outputs/roberta",
                         help="Output directory.")
-    parser.add_argument("--num_train_epochs", type=int, default=5,
-                        help="Number of training epochs")
+
     args = parser.parse_args()
 
-    print("Loading data from %s" % args.input)
-    data = load_dataset(args.input, add_annotations=args.add_annotations,
-                        usecols=[args.predict_index_col, args.essay_col],
-                        )
+    print("Loading data from %s" % args.train_data)
+    train_data = pd.read_csv(args.train_data)
+    train_data = train_data[train_data[args.label_col].isnull()]
+    print("Loaded %d training examples." % len(train_data))
 
-    model_type = "roberta-base"
-    text_col = args.essay_col
+    model_type = args.model_type
+    text_cols = args.text_cols.split(",")
     output_dir = args.output_dir
-    show_gpu('Initial GPU memory usage:')
     model = None
 
     if args.train:
-        print(args.label_col)
-        train_df = data
-        eval_df = data
-        model = train(args.label_col, train_df, eval_df, text_col, output_dir, model_type,
+        print("Using %s as label" % args.label_col)
+
+        if len(text_cols) == 1:
+            train_data = train_data.rename(columns={text_cols[0]:
+                                                        'text',
+                                                    args.label_col: 'labels'})[["text", "labels"]].dropna()
+        if len(text_cols) == 2:
+            train_data = train_data.rename(columns={text_cols[0]: 'text_a',
+                                                      text_cols[1]: 'text_b',
+                                                    args.label_col: 'labels'})[["text_a", "text_b",
+                                                                                "labels"]].dropna()
+        else:
+            print("You can have up to 2 texts to classify!")
+            exit()
+
+        if args.dev_split_size > 0:
+            train_df, eval_df = train_test_split(train_data, test_size=0.2)
+        else:
+            train_df = train_data
+            eval_df = train_data
+        model = train(args.label_col,
+                      train_df,
+                      eval_df,
+                      text_cols,
+                      output_dir,
+                      model_type,
               num_train_epochs=args.num_train_epochs)
+
     if args.predict:
-        predict_df = data.rename(columns={text_col: 'text'})[[args.predict_index_col, "text"]].dropna()
-        predict_list = predict_df["text"].tolist()
+        print("Loading data for prediction from %s" % args.input)
+        predict_data = pd.read_csv(args.predict_data)
+        if len(text_cols) == 1:
+            predict_df = predict_data.rename(columns={text_cols[0]: 'text'})[[args.predict_index_col,
+                                                                              "text"]].dropna()
+            predict_list = predict_df["text"].tolist()
+        if len(text_cols) == 2:
+            predict_df = predict_data.rename(columns={text_cols[0]: 'text_a',
+                                                      text_cols[1]: 'text_b',})[[args.predict_index_col,
+                                                                                 "text_a", "text_b"]].dropna()
+            predict_list = predict_df[["text_a", "text_b"]].tolist()
+        else:
+            print("You can have up to 2 texts to classify!")
+            exit()
         index_list = predict_df[args.predict_index_col].tolist()
         fname = args.label_col + "_" + args.input.split("/")[-1].split(".")[0]
         predict(fname, output_dir, model, model_type, predict_list=predict_list,
                 index_list=index_list, index_colname=args.predict_index_col)
-
-
-    if args.cv:
-        n = 5
-        kf = KFold(n_splits=n, random_state=42, shuffle=True)
-        k = 0
-
-        data = data[~data[args.label_col].isnull()]
-        predict_df = data.rename(columns={text_col: 'text'})[[args.predict_index_col, "text"]].dropna()
-
-        for train_index, val_index in kf.split(data):
-            print("Split %d" % k)
-            output_dir = args.output_dir + "_k%d" % k
-
-            train_df = data.iloc[train_index]
-            eval_df = data.iloc[val_index]
-            model = train(args.label_col, train_df, eval_df, text_col, output_dir=output_dir,
-                           model=model_type, num_train_epochs=args.num_train_epochs,
-                          cross_validate=True)
-
-            predict_df = eval_df.rename(columns={text_col: 'text'})[[args.predict_index_col, "text"]].dropna()
-            predict_list = predict_df["text"].tolist()
-            index_list = predict_df[args.predict_index_col].tolist()
-            fname = args.label_col + "_" + args.input.split("/")[-1].split(".")[0] + "_split_%d" % k
-            predict(fname, output_dir, model, model_type, predict_list=predict_list,
-                    index_list=index_list, index_colname=args.predict_index_col)
-
-            del model
-            gc.collect()
-            torch.cuda.empty_cache()
-            k+=1
-    if args.no_cv_train:
-        train_df, eval_df = train_test_split(data, test_size=0.2)
-        print(args.col)
-        train(args.col, train_df, eval_df, text_col, output_dir, model_type,
-                       num_train_epochs=args.num_train_epochs)
