@@ -10,13 +10,15 @@ python supervised_classification.py --cv
 Specify column:
 python supervised_classification.py --cv --col COLNAME
 """
-from simpletransformers.classification import ClassificationModel
+from simpletransformers.classification import ClassificationModel, ClassificationArgs
 from argparse import ArgumentParser
 from sklearn.model_selection import KFold, train_test_split
 from scipy.stats import pearsonr, spearmanr
 import warnings
 import pandas as pd
 from sys import exit
+import logging
+import torch
 warnings.filterwarnings("ignore")
 
 
@@ -35,33 +37,39 @@ def train(colname, train_df, eval_df, text_cols,
     print("Train size: %d" % len(train_df))
     print("Eval size: %d" % len(eval_df))
 
-    train_args = {
-        'reprocess_input_data': True,
-        'overwrite_output_dir': True,
-        'evaluate_during_training': True,  # change if needed
-        'max_seq_length': int(max_seq_length / len(text_cols)),
-        'num_train_epochs': num_train_epochs,
-        'evaluate_during_training_steps': 500,
-        'save_eval_checkpoints': False,
-        'save_model_every_epoch': False,
-        'wandb_project': colname,
-        'train_batch_size': train_batch_size,
-        'output_dir': output_dir + "/" + colname,
-        'best_model_dir': output_dir + "/" + colname + "/best_model",
-        'cache_dir': output_dir + "/" + colname + "/cache",
-        'tensorboard_dir': output_dir + "/" + colname + '/tensorboard',
-        'regression': True,
-        'use_cuda': True,
-        'gradient_accumulation_steps': gradient_accumulation_steps,
-        'wandb_kwargs': {'reinit': True,},
-        'fp16': False,
-        'fp16_opt_level': 'O0',
-        'no_cache': False,
-        'no_save': cross_validate,
-        'save_optimizer_and_scheduler': True,
-    }
+    print(train_df.head())
+    print(eval_df.head())
 
-    model = ClassificationModel(model.split("-")[0], model, num_labels=num_labels, args=train_args)
+    print(torch.cuda.is_available())
+
+    model_args = ClassificationArgs()
+    model_args.reprocess_input_data = True
+    model_args.overwrite_output_dir = True
+    model_args.evaluate_during_training = True  # change if needed
+    model_args.max_seq_length = int(max_seq_length / len(text_cols))
+    model_args.num_train_epochs = num_train_epochs
+    model_args.evaluate_during_training_steps = 500
+    model_args.save_eval_checkpoints = False
+    model_args.save_model_every_epoch = False
+    model_args.wandb_project = colname
+    model_args.train_batch_size = train_batch_size
+    model_args.output_dir = output_dir + "/" + colname
+    model_args.best_model_dir = output_dir + "/" + colname + "/best_model"
+    model_args.cache_dir = output_dir + "/" + colname + "/cache"
+    model_args.tensorboard_dir = output_dir + "/" + colname + "/tensorboard"
+    model_args.regression = num_labels == 1
+    model_args.gradient_accumulation_steps = gradient_accumulation_steps
+    model_args.wandb_kwargs = {"reinit": True}
+    model_args.fp16 = False
+    model_args.fp16_opt_level = "O0"
+    model_args.no_cache = False
+    model_args.no_save = cross_validate
+    model_args.save_optimizer_and_scheduler = True
+
+    model = ClassificationModel(model.split("-")[0], model,
+                                use_cuda=torch.cuda.is_available(),
+                                num_labels=num_labels,
+                                args=model_args)
 
     model.train_model(train_df, eval_df=eval_df, pearson_corr=pearson_corr, spearman_corr=spearman_corr)
     return model
@@ -117,13 +125,18 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    logging.basicConfig(level=logging.INFO)
+    transformers_logger = logging.getLogger("transformers")
+    transformers_logger.setLevel(logging.WARNING)
+
     print("Loading data from %s" % args.train_data)
-    train_data = pd.read_csv(args.train_data)
-    train_data = train_data[train_data[args.label_col].isnull()]
+    train_data = pd.read_csv(args.train_data).sample(frac=1)
+    train_data = train_data[~train_data[args.label_col].isnull()]
     print("Loaded %d training examples." % len(train_data))
 
     model_type = args.model_type
     text_cols = args.text_cols.split(",")
+    print(text_cols)
     output_dir = args.output_dir
     model = None
 
@@ -134,7 +147,7 @@ if __name__ == "__main__":
             train_data = train_data.rename(columns={text_cols[0]:
                                                         'text',
                                                     args.label_col: 'labels'})[["text", "labels"]].dropna()
-        if len(text_cols) == 2:
+        elif len(text_cols) == 2:
             train_data = train_data.rename(columns={text_cols[0]: 'text_a',
                                                       text_cols[1]: 'text_b',
                                                     args.label_col: 'labels'})[["text_a", "text_b",
@@ -163,7 +176,7 @@ if __name__ == "__main__":
             predict_df = predict_data.rename(columns={text_cols[0]: 'text'})[[args.predict_index_col,
                                                                               "text"]].dropna()
             predict_list = predict_df["text"].tolist()
-        if len(text_cols) == 2:
+        elif len(text_cols) == 2:
             predict_df = predict_data.rename(columns={text_cols[0]: 'text_a',
                                                       text_cols[1]: 'text_b',})[[args.predict_index_col,
                                                                                  "text_a", "text_b"]].dropna()

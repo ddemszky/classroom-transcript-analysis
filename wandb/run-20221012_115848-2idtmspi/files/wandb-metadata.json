@@ -1,0 +1,32 @@
+{
+    "os": "macOS-12.4-arm64-arm-64bit",
+    "python": "3.10.6",
+    "heartbeatAt": "2022-10-12T18:58:48.951937",
+    "startedAt": "2022-10-12T18:58:48.486912",
+    "docker": null,
+    "cpu_count": 10,
+    "cuda": null,
+    "args": [
+        "--train",
+        "--train_data=data/paired_annotations.csv",
+        "--dev_split_size=0",
+        "--num_train_epochs=5",
+        "--text_cols=student_text",
+        "--label_col=student_on_task",
+        "--predict",
+        "--predict_data=data/paired_utterances.csv",
+        "--predict_index_col=exchange_idx"
+    ],
+    "state": "running",
+    "program": "/Users/ddemszky/classroom-transcript-analysis/run_classifier.py",
+    "codePath": "run_classifier.py",
+    "git": {
+        "remote": "https://github.com/ddemszky/classroom-transcript-analysis.git",
+        "commit": "dfcff33168a9aadc2df952363e9d8b460d35053f"
+    },
+    "email": "ddemszky@gmail.com",
+    "root": "/Users/ddemszky/classroom-transcript-analysis",
+    "host": "DN0a224519.SUNet",
+    "username": "ddemszky",
+    "executable": "/opt/homebrew/Caskroom/miniforge/base/envs/st/bin/python3"
+}
