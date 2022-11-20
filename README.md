@@ -15,4 +15,13 @@ The dataset contains the following files:
 4. `paired_annotations_release.csv`: Turn-level annotations for `student_on_task`,	`teacher_on_task`,	`high_uptake`,	`focusing_question`, using majority rater labels. The annotation protocol is included under the `coding schemes` folder.
 
 
+## Train a Turn-Level Classifier
+You can use the `run_classifier.py` script to train turn-level classifiers like the ones we describe in the paper.
+
+1. Create virtual environment: `python3 -m venv venv`
+2. Activate virtual environment: `source venv/bin/activate`
+3. Install requirements `$ pip3 install -r requirements.txt`. Currently the Pytorch version is for a CPU, so if you're running this on a GPU, you'll probably want to update the Pytorch (and maybe transformer) installation so that it works on a GPU.
+
+
+
 
