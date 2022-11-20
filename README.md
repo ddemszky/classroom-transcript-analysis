@@ -15,7 +15,7 @@ The dataset contains the following files:
 4. `paired_annotations_release.csv`: Turn-level annotations for `student_on_task`,	`teacher_on_task`,	`high_uptake`,	`focusing_question`, using majority rater labels. The annotation protocol is included under the `coding schemes` folder.
 
 
-# Train a Turn-Level Classifier
+## Train a Turn-Level Classifier
 You can use the `run_classifier.py` script to train turn-level classifiers like the ones we describe in the paper.
 
 1. Create virtual environment: `python3 -m venv venv`
