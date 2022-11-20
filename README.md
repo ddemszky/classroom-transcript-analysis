@@ -18,10 +18,39 @@ The dataset contains the following files:
 ## Train a Turn-Level Classifier
 You can use the `run_classifier.py` script to train turn-level classifiers like the ones we describe in the paper.
 
+Set up the virtual environment:
 1. Create virtual environment: `python3 -m venv venv`
 2. Activate virtual environment: `source venv/bin/activate`
-3. Install requirements `$ pip3 install -r requirements.txt`. Currently the Pytorch version is for a CPU, so if you're running this on a GPU, you'll probably want to update the Pytorch (and maybe transformer) installation so that it works on a GPU.
+3. Install requirements `$ pip3 install -r requirements.txt`. You might need to use different pytorch versions depending on whether you are using a GPU or a CPU. We recommend using a GPU for training.
 
+### Run fine-tuning
 
+The following script runs training for the `student_on_task` discourse move, using 90% of all annotations (`dev_split_size`=0.1), while balancing out 0 and 1 labels while training. It also runs predictions on all the data once the model finished training. You can tailor the parameters to your own setting easily (e.g. choose a different discourse move). 
+```
+python run_classifier.py \
+--train \
+--train_data=data/paired_annotations_release.csv \
+--dev_split_size=0.1 \
+--num_train_epochs=5 \
+--text_cols=student_text \
+--label_col=student_on_task \
+--predict \
+--predict_data=data/paired_utterances.csv \
+--predict_index_col=exchange_idx \
+--balance_labels
+```
+### Run cross validation
+
+The following script runs 5-fold cross-validation for the `focusing_question` discourse move, while balancing out 0 and 1 labels while training. It also runs predictions on all the data once the model finished training. 
+```
+python run_classifier.py \
+--cv \
+--train_data=data/paired_annotations.csv \
+--num_train_epochs=5 \
+--text_cols=student_text,teacher_text \
+--label_col=focusing_question \
+--predict_index_col=exchange_idx \
+--balance_labels
+```
 
 
