@@ -1,7 +1,8 @@
 # Classroom Transcript Analysis
 
-This repository contains code for the paper:
-> Demszky, D. & Hill, H. C.. (2022). The NCTE Transcripts: A Dataset of Elementary Math Classroom Transcripts. _To appear._
+Please cite the following when using the transcripts:
+> Demszky, D., & Hill, H. (2022). [The NCTE transcripts: A dataset of elementary math classroom transcripts](https://arxiv.org/pdf/2211.11772.pdf). _arXiv preprint arXiv:2211.11772_.
+
 
 **Each user** who would like to access the dataset need to fill out this form: https://forms.gle/1yWybvsjciqL8Y9p8. Once you fill it out, the Google Drive folder will be shared with you automatically.
 
@@ -12,7 +13,9 @@ The dataset contains the following files:
 2. `student_reasoning.csv`: Turn-level annotations for `student_reasoning`. The annotations are binary. 
 3. `paired_annotations.csv`: Turn-level annotations for `student_on_task`,	`teacher_on_task`,	`high_uptake`,	`focusing_question`, using majority rater labels. The annotation protocol is included under the `coding schemes` folder.
 
-**The metadata and documentation are available on [ICPSR](https://www.icpsr.umich.edu/web/ICPSR/studies/36095).** You can use the OBSID variable and the NCTETID variables to map transcript data to the metadata.
+The transcripts are associated with metadata, including observation scores, value added measures and student questionnaire responses. The metadata and additional documentation are available on [ICPSR](https://www.icpsr.umich.edu/web/ICPSR/studies/36095).** You can use the OBSID variable and the NCTETID variables to map transcript data to the metadata.
+
+**Issues with transcripts:** Certain transcripts have issues with respect to speaker assignment. Namely, student utterances may be labeled as teacher utterances and vice versa. The `transcript_issues.txt` includes a list of OBSIDs that we recommend excluding from your analyses. If you encounter issues with other transcripts, please feel free to make a pull request or email [Dora](mailto:ddemszky@stanford.edu).
 
 
 ## Train a Turn-Level Classifier
@@ -53,4 +56,5 @@ python run_classifier.py \
 --balance_labels
 ```
 
+For any questions about the dataset, please email Dora at ddemszky@stanford.edu.
 
