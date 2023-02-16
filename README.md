@@ -1,4 +1,4 @@
-# Classroom Transcript Analysis
+# NCTE Classroom Transcript Analysis
 
 Please cite the following when using the transcripts:
 > Demszky, D., & Hill, H. (2022). [The NCTE transcripts: A dataset of elementary math classroom transcripts](https://arxiv.org/pdf/2211.11772.pdf). _arXiv preprint arXiv:2211.11772_.
