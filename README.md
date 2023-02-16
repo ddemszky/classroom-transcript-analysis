@@ -13,7 +13,7 @@ The dataset contains the following files:
 2. `student_reasoning.csv`: Turn-level annotations for `student_reasoning`. The annotations are binary. 
 3. `paired_annotations.csv`: Turn-level annotations for `student_on_task`,	`teacher_on_task`,	`high_uptake`,	`focusing_question`, using majority rater labels. The annotation protocol is included under the `coding schemes` folder.
 
-The transcripts are associated with metadata, including observation scores, value added measures and student questionnaire responses. The metadata and additional documentation are available on [ICPSR](https://www.icpsr.umich.edu/web/ICPSR/studies/36095).** You can use the OBSID variable and the NCTETID variables to map transcript data to the metadata.
+The transcripts are associated with metadata, including observation scores, value added measures and student questionnaire responses. The metadata and additional documentation are available on [ICPSR](https://www.icpsr.umich.edu/web/ICPSR/studies/36095). You can use the OBSID variable and the NCTETID variables to map transcript data to the metadata.
 
 **Issues with transcripts:** Certain transcripts have issues with respect to speaker assignment. Namely, student utterances may be labeled as teacher utterances and vice versa. The `transcript_issues.txt` includes a list of OBSIDs that we recommend excluding from your analyses. If you encounter issues with other transcripts, please feel free to make a pull request or email [Dora](mailto:ddemszky@stanford.edu).
 
