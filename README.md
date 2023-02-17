@@ -4,7 +4,7 @@ Please cite the following when using the transcripts:
 > Demszky, D., & Hill, H. (2022). [The NCTE transcripts: A dataset of elementary math classroom transcripts](https://arxiv.org/pdf/2211.11772.pdf). _arXiv preprint arXiv:2211.11772_.
 
 
-**EACH user** who would like to access the dataset need to fill out this form: https://forms.gle/1yWybvsjciqL8Y9p8. Once you fill it out, the Google Drive folder will be shared with you automatically.
+**EACH user** who would like to access the dataset should fill out this form: https://forms.gle/1yWybvsjciqL8Y9p8. Once you fill it out, the Google Drive folder will be shared with you automatically.
 
 
 The dataset contains the following files:
