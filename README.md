@@ -9,8 +9,8 @@ Please cite the following when using the transcripts:
 The dataset contains the following files:
 
 1. `single_utterances.csv`: A csv file containing all utterances from the transcript dataset. The `OBSID` column represents the unique ID for the transcript, and the `NCTETID` represents the teacher ID, which are mappable to metadata. `comb_idx` represents a unique ID for each utterance (concatenation of `OBSID` and `turn_idx`), which is mappable to turn-level annotations.
-2. `student_reasoning.csv`: Turn-level annotations for `student_reasoning`. The annotations are binary. 
-3. `paired_annotations.csv`: Turn-level annotations for `student_on_task`,	`teacher_on_task`,	`high_uptake`,	`focusing_question`, using majority rater labels. The annotation protocol is included under the `coding schemes` folder.
+2. `student_reasoning.csv`: Turn-level manual annotations for `student_reasoning`. The annotations are binary. Contains only a **small subset** of the full data that was manually annotated. To run inference on all utterances, use the student reasoning classifier in [EduConvokit](https://edu-convokit.readthedocs.io/en/latest/annotation.html) (only apply to student utterances that are > 7 words long).
+3. `paired_annotations.csv`: Turn-level annotations for `student_on_task`,	`teacher_on_task`,	`high_uptake`,	`focusing_question`, using majority rater labels. The annotation protocol is included under the `coding schemes` folder. Contains only a **small subset** of the full data that was manually annotated. To run inference on all utterances, use the on/off-task, uptake, and focusing questions models in [EduConvokit](https://edu-convokit.readthedocs.io/en/latest/annotation.html).
 
 The transcripts are associated with metadata, including observation scores, value added measures and student questionnaire responses. The metadata and additional documentation are available on [ICPSR](https://www.icpsr.umich.edu/web/ICPSR/studies/36095). You can use the OBSID variable and the NCTETID variables to map transcript data to the metadata.
 
