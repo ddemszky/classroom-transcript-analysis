@@ -1,8 +1,7 @@
 # NCTE Classroom Transcript Analysis
 
 Please cite the following when using the transcripts:
-> Demszky, D., & Hill, H. (2022). [The NCTE transcripts: A dataset of elementary math classroom transcripts](https://arxiv.org/pdf/2211.11772.pdf). _arXiv preprint arXiv:2211.11772_.
-
+> Demszky, D., & Hill, H. (2023). [The NCTE transcripts: A dataset of elementary math classroom transcripts](https://aclanthology.org/2023.bea-1.44.pdf). In *Proceedings of the 18th Workshop on Innovative Use of NLP for Building Educational Applications (BEA 2023)* (pp. 528-538).
 
 **EACH user** who would like to access the dataset should fill out this form: https://forms.gle/1yWybvsjciqL8Y9p8. Once you fill it out, the Google Drive folder will be shared with you automatically.
 
